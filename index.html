@@ -10,7 +10,7 @@
     <div class="container">
         <figure class="ref">
             <canvas id="target" width="500" height="250"></canvas>
-            <figcaption>match this</figcaption>
+            <figcaption>match this (color included)</figcaption>
         </figure>
 
         <h1 id="grade">grade: ? %</h1>
@@ -24,10 +24,12 @@
             <button data-color="purple">purple</button>
             <button data-color="white">white</button>
             <button data-color="rainbow">rainbow</button>
-            <button onclick="resetCanvas()">clear</button>
-            <button onclick="grade(window.difficulty)">submit</button>
+            <button onclick="resetCanvas()" style="--c: #f5e0dc">clear</button>
+            <button onclick="grade(window.difficulty)" style="--c: #f9e2af">submit</button>
+            <button onclick="drawFace(tc)" style="--c: #cba6f7">next</button>
         </div>
     </div>
     <script src="index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script><script>eruda.init()</script>
 </body>
 </html>

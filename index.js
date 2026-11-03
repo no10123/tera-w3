@@ -3,13 +3,17 @@ const inside  = document.getElementById("inside");  // fire
 const ctx_o = outside.getContext("2d");
 const ctx_i = inside.getContext("2d");
 const tc = document.getElementById('target').getContext('2d');
+let color;
+window.colors = ["red", "green", "blue", "purple", "white"];
+const hex = {"red":"#f38ba8","green":"#a6e3a1","blue":"#89b4fa","purple":"#cba6f7","white":"#f5e0dc"};
 drawFace(tc, 1, '#1e1e2e');
 
-window.difficulty = "easy" // easy, medium, hard
+window.difficulty = "easy" // easy, medium, hard, insane
 const DIFFICULTY = {
     easy:   { tolerance: 3, fullMarks: 0.65 },
     medium: { tolerance: 2, fullMarks: 0.75 },
     hard:   { tolerance: 1, fullMarks: 0.90 },
+    insane: { tolerance: 0, fullMarks: 0.95 },
 };
 
 const msgs = {
@@ -21,6 +25,7 @@ const msgs = {
     90: ["pro","carving master","insanely good","near perfect"],
     99: ["pro+","carving grand master","perfection"]
 }
+
 
 const audio = new Audio('music.mp3');
 audio.loop = true;
@@ -150,7 +155,9 @@ const toDesign = (e) => {
   };
 };
 
-function drawFace(c, scale = 1, color = '#fff') {
+
+function drawFace(c, scale = 1) {
+    color = hex[window.colors[Math.floor(Math.random() * window.colors.length)]];
     c.save();
     c.scale(scale, scale);
     c.fillStyle = color;
@@ -202,9 +209,10 @@ function grade(difficulty=window.difficulty) {
     const target = getMask(document.getElementById('target'), a => a > 128)
 
     const {coverage, precision, raw} = score(carved,target,tolerance);
-    const pct = Math.round(Math.min(1, raw / fullMarks) * 100);
-    
-    console.log({ coverage, precision, raw });
+    const a = hex[window.fireColor] === color ? 10 : 0;
+    const pct = (Math.round(((Math.min(1, raw / fullMarks) * 100 + a) / 11) * 10));
+
+    console.log({ coverage, precision, raw, a });
     let msg = Object.keys(msgs).filter(key => pct >= Number(key)).reduce((acc, key) => msgs[key], "");
     msg = msg[Math.floor(Math.random() * msg.length)];
     document.getElementById('grade').innerText = `grade: ${pct} % - ${msg}`;
