@@ -153,6 +153,12 @@ button[data-color="green"]  { --c: #a6e3a1; }
 button[data-color="purple"] { --c: #cba6f7; }
 button[data-color="white"]  { --c: #cdd6f4; }
 
+button[color="red"]    { --c: #f38ba8; }
+button[color="blue"]   { --c: #89b4fa; }
+button[color="green"]  { --c: #a6e3a1; }
+button[color="purple"] { --c: #cba6f7; }
+button[color="white"]  { --c: #cdd6f4; }
+
 .btns button:hover,
 .btns button.active {
     background-color: var(--c);
@@ -161,3 +167,5 @@ button[data-color="white"]  { --c: #cdd6f4; }
 }
 
 .btns button:active { transform: scale(.97); }
+
+.container.hidden { display: none; }

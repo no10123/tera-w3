@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="index.css">
 </head>
 <body>
-    <div class="container">
+    <div class="container hidden" id="game-container">
         <figure class="ref">
             <canvas id="target" width="500" height="250"></canvas>
             <figcaption>match this (color included)</figcaption>
@@ -37,7 +37,16 @@
             <button data-color="rainbow">rainbow</button>
             <button onclick="resetCanvas()" style="--c: #f5e0dc">clear</button>
             <button onclick="grade(window.difficulty)" style="--c: #f9e2af">submit</button>
-            <button onclick="drawFace(tc);resetCanvas();document.getElementById('grade').innerText = `grade: ? % (best: ${window.best} %)`;clearDiff();" style="--c: #cba6f7">next</button>
+            <button onclick="startRound()" style="--c: #cba6f7">next</button>
+        </div>
+    </div>
+    <div class="container" id="main-menu">
+        <h1>pumpkin carver</h1>
+        <div class="btns">
+            <button color="green" onclick="document.getElementById('main-menu').classList.add('hidden'); document.getElementById('game-container').classList.remove('hidden');">play</button>
+            <button color="blue">play timed</button>
+            <button color="yellow">editor</button>
+            <button color="red">settings</button>
         </div>
     </div>
     <script src="index.js"></script>

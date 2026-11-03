@@ -138,8 +138,16 @@ function resetCanvas() {
     ctx_o.fillRect(0, 0, width, height);
 }
 
+function startRound() {
+    clearDiff();
+    drawFace(tc);
+    resetCanvas();
+    document.getElementById('grade').innerText = `grade: ? % (best: ${window.best} %)`;
+}
+
 function fit() {
     const r = outside.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2) return;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const bw = Math.max(1, Math.round(r.width  * dpr));
     const bh = Math.max(1, Math.round(r.height * dpr));
