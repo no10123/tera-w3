@@ -101,3 +101,39 @@ h1   { grid-row: 1; grid-column: 1; margin: 0; font-size: 16px; font-weight: 600
 }
 
 .btns { grid-row: 4; grid-column: 1; }
+
+/* found this cool css split button. */
+.topbar {
+    grid-row: 1; grid-column: 1;
+    display: flex; align-items: center; justify-content: center;
+    gap: 14px; flex-wrap: wrap;
+}
+#grade { margin: 0; font-size: 16px; font-weight: 600; }
+
+.diffs { display: flex; }
+
+.diffs button {
+    --c: #a6e3a1;
+    appearance: none;
+    background: transparent;
+    border: 2px solid #45475a;
+    color: #a6adc8;
+    font: inherit; font-size: 13px; font-weight: 600;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: color .18s, background-color .18s, border-color .18s, transform .12s;
+}
+.diffs button + button { margin-left: -2px; }
+.diffs button:first-child { border-radius: 10px 0 0 10px; }
+.diffs button:last-child  { border-radius: 0 10px 10px 0; }
+.diffs button:hover  { color: var(--c); border-color: var(--c); position: relative; z-index: 2; }
+.diffs button:active { transform: scale(.96); }
+.diffs button.on {
+    background: var(--c); border-color: var(--c); color: #16161f;
+    position: relative; z-index: 3;
+}
+
+.diffs button[data-diff="easy"]   { --c: #a6e3a1; }
+.diffs button[data-diff="medium"] { --c: #f9e2af; }
+.diffs button[data-diff="hard"]   { --c: #fab387; }
+.diffs button[data-diff="insane"] { --c: #f38ba8; }

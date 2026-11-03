@@ -4,6 +4,8 @@ const ctx_o = outside.getContext("2d");
 const ctx_i = inside.getContext("2d");
 const tc = document.getElementById('target').getContext('2d');
 let color;
+window.best = 0
+const newBest = (score) => { window.best = Math.max(window.best, score);}
 window.colors = ["red", "green", "blue", "purple", "white"];
 const hex = {"red":"#f38ba8","green":"#a6e3a1","blue":"#89b4fa","purple":"#cba6f7","white":"#f5e0dc"};
 drawFace(tc, 1, '#1e1e2e');
@@ -162,23 +164,67 @@ function drawFace(c, scale = 1) {
     c.scale(scale, scale);
     c.fillStyle = color;
     c.strokeStyle = color;
-    c.beginPath();
-    c.moveTo(50, 50);
-    c.lineTo(150, 150);
-    c.lineTo(30, 150);
+    let mode;
+    c.clearRect(0, 0, 500, 250);
+    // left eye
+    mode = Math.floor(Math.random() * 3);
+    if (mode === 0) {
+        c.beginPath();
+        c.moveTo(50, 50);
+        c.lineTo(150, 150);
+        c.lineTo(30, 150);
+        c.fill();
+    } else if (mode === 1) {
+        c.beginPath();
+        c.arc(100, 100, 50, 0, Math.PI * 2);
+        c.fill();
+    } else if (mode === 2) {
+        c.beginPath();
+        c.moveTo(50, 150);
+        c.lineTo(150, 150);
+        c.lineTo(100, 50);
+        c.fill();
+    }
+    // right eye
+    mode = Math.floor(Math.random() * 3);
+    if (mode === 0) {
+        c.beginPath();
+        c.moveTo(450, 50);
+        c.lineTo(470, 150);
+        c.lineTo(350, 150);
+        c.fill();
+    } else if (mode === 1) {
+        c.beginPath();
+        c.arc(400, 100, 50, 0, Math.PI * 2);
+        c.fill();
+    } else if (mode === 2) {
+        c.beginPath();
+        c.moveTo(450, 150);
+        c.lineTo(350, 150);
+        c.lineTo(400, 50);
+        c.fill();
+    }
+    // mouth
+    mode = Math.floor(Math.random() * 3);
+    if (mode === 0) {
+        c.beginPath();
+        c.moveTo(50, 200);
+        c.lineTo(50, 250);
+        c.lineTo(450, 250);
+        c.lineTo(450, 200);
+    } else if (mode === 1) {
+        c.beginPath();
+        c.arc(250, 225, 25, 0, Math.PI);
+        c.fill();
+    } else if (mode === 2) {
+        c.beginPath();
+        c.moveTo(50, 200);
+        c.lineTo(450, 190);
+        c.lineTo(450, 250);
+        c.lineTo(50, 250);
+        c.stroke();
+    }
     c.fill();
-    c.beginPath();
-    c.moveTo(450, 50);
-    c.lineTo(470, 150);
-    c.lineTo(350, 150);
-    c.fill();
-    c.beginPath();
-    c.moveTo(50, 200);
-    c.lineTo(50, 250);
-    c.lineTo(450, 250);
-    c.lineTo(450, 200);
-    c.fill();
-    
 }
 
 // maroon - #eba0ac
@@ -200,6 +246,35 @@ row.addEventListener('click', (e) => {
     buttons.forEach(b => b.classList.toggle('active', b === btn));
 });
 
+const DIFF_KEY = 'pumpkin.difficulty';
+const diffRow  = document.querySelector('.diffs');
+const diffBtns = [...diffRow.querySelectorAll('button[data-diff]')];
+
+function setDifficulty(name) {
+    if (!DIFFICULTY[name]) name = 'easy';
+    window.difficulty = name;
+
+    diffBtns.forEach(b => {
+        const on = b.dataset.diff === name;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+
+    try { localStorage.setItem(DIFF_KEY, name); } catch (_) {}
+
+    if (typeof newRound === 'function') newRound();
+    if (typeof refreshBest === 'function') refreshBest();
+}
+
+diffRow.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-diff]');
+    if (b) setDifficulty(b.dataset.diff);
+});
+
+let saved = 'easy';
+try { saved = localStorage.getItem(DIFF_KEY) || 'easy'; } catch (_) {}
+setDifficulty(saved);
+
 buttons.find(b => b.dataset.color === window.fireColor)?.classList.add('active');
 
 function grade(difficulty=window.difficulty) {
@@ -215,7 +290,8 @@ function grade(difficulty=window.difficulty) {
     console.log({ coverage, precision, raw, a });
     let msg = Object.keys(msgs).filter(key => pct >= Number(key)).reduce((acc, key) => msgs[key], "");
     msg = msg[Math.floor(Math.random() * msg.length)];
-    document.getElementById('grade').innerText = `grade: ${pct} % - ${msg}`;
+    document.getElementById('grade').innerText = `grade: ${pct} % - ${msg} (best: ${window.best} %)`;
+    newBest(pct);
 }
 
 outside.addEventListener("pointerdown", (e) => {
