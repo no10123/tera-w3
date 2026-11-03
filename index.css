@@ -11,6 +11,9 @@ html, body {
     height: 100vh;
     display: grid;
     grid-template-columns: 1fr;
+    place-items: center;
+    align-content: center;
+    row-gap: 14px;
 }
 
 #inside, #outside {
@@ -20,4 +23,13 @@ html, body {
 
 #outside {
     z-index: 2;
+}
+
+.btns {
+    grid-row: 2;
+    grid-column: 1;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
 }

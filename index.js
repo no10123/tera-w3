@@ -43,7 +43,44 @@ function carve(a, b) {
     ctx_o.globalCompositeOperation = "source-over";
 }
 
+function calcColor(color, p){
+    // red, green, blue, purple, white, rainbow
+    if (color === "red") {
+        p.r = '255';
+        p.g = Math.round(Math.random() * -90 + 100);
+        p.b = Math.round(Math.random() * -20 + 10);
+    } else if (color === "green") {
+        p.r = Math.round(Math.random() * -90 + 100);
+        p.g = '255';
+        p.b = Math.round(Math.random() * -20 + 10);
+    } else if (color === "blue") {
+        p.r = Math.round(Math.random() * -20 + 10);
+        p.g = Math.round(Math.random() * -90 + 100);
+        p.b = '255';
+    } else if (color === "purple") {
+        p.r = Math.round(Math.random() * -90 + 100);
+        p.g = Math.round(Math.random() * -20 + 10);
+        p.b = '255';
+    } else if (color === "teal") {
+        p.r = Math.round(Math.random() * -20 + 10);
+        p.g = '255';
+        p.b = Math.round(Math.random() * -90 + 110);
+    } else if (color === "white") {
+        const gray = Math.round(Math.random() * -90 + 110);
+        p.r = gray;
+        p.g = gray;
+        p.b = gray;
+    } else if (color === "rainbow") {
+        p.r = Math.round(Math.random() * -90 + 110);
+        p.g = Math.round(Math.random() * -90 + 110);
+        p.b = Math.round(Math.random() * -90 + 110);
+    } else {
+        console.warn("not valid color.")
+    }
+}
+
 window.onload = function () {
+    window.fireColor = "red"
     // bg fire
     let particles = [];
     let SmokeParticles = [];
@@ -64,9 +101,7 @@ window.onload = function () {
         this.radius = Math.random()*(-50) + 50;
         this.life = 20 + Math.random() * 10;
         this.remaining_life = this.life;
-        this.r = '255';
-        this.g = Math.round(Math.random() * -90 + 100);
-        this.b = Math.round(Math.random() * -20 + 10);
+        calcColor(window.fireColor,this);
     }
 
     for (let i  = 0; i < particle_count; i++) {
