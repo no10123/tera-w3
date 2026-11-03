@@ -1,10 +1,14 @@
 const outside = document.getElementById("outside"); // pumpkin part
 const inside  = document.getElementById("inside");  // fire
+const diffC   = document.getElementById("diff");
 const ctx_o = outside.getContext("2d");
 const ctx_i = inside.getContext("2d");
+const ctx_d = diffC.getContext("2d");
 const tc = document.getElementById('target').getContext('2d');
 let color;
 window.best = 0
+const MASK_W = 100;
+const MASK_H = 50;
 const newBest = (score) => { window.best = Math.max(window.best, score);}
 window.colors = ["red", "green", "blue", "purple", "white"];
 const hex = {"red":"#f38ba8","green":"#a6e3a1","blue":"#89b4fa","purple":"#cba6f7","white":"#f5e0dc"};
@@ -32,8 +36,36 @@ const msgs = {
 const audio = new Audio('music.mp3');
 audio.loop = true;
 
-const MASK_W = 100;
-const MASK_H = 50;
+const smallDiff = document.createElement('canvas');
+smallDiff.width = MASK_W; smallDiff.height = MASK_H;
+const sdctx = smallDiff.getContext('2d');
+
+const HIT    = [166, 227, 161];   // #a6e3a1
+const EXTRA  = [243, 139, 168];   // #f38ba8
+const MISSED = [108, 112, 134];   // #6c7086
+
+function showDiff(carved, target, carvedWide, targetWide) {
+    const img = sdctx.createImageData(MASK_W, MASK_H);
+    const px = img.data;
+
+    for (let i = 0; i < MASK_W * MASK_H; i++) {
+        let col = null;
+        if (target[i] && carvedWide[i])       col = HIT;
+        else if (target[i])                   col = MISSED;
+        else if (carved[i] && !targetWide[i]) col = EXTRA;
+        if (!col) continue;
+        px[i*4]   = col[0];
+        px[i*4+1] = col[1];
+        px[i*4+2] = col[2];
+        px[i*4+3] = 200;
+    }
+    sdctx.putImageData(img, 0, 0);
+
+    ctx_d.clearRect(0, 0, width, height);
+    ctx_d.imageSmoothingEnabled = true;
+    ctx_d.drawImage(smallDiff, 0, 0, width, height);
+}
+
 
 const scratch = document.createElement('canvas');
 scratch.width = MASK_W;
@@ -91,7 +123,8 @@ function score(carved, target, tolerance) {
 
     const coverage  = targetTotal ? targetHit / targetTotal : 0;
     const precision = carvedTotal ? carvedGood / carvedTotal : 0;
-    return { coverage, precision, raw: coverage * precision };
+    return { coverage, precision, raw: coverage * precision, carvedWide, targetWide };
+
 }
 
 const width  = outside.width;
@@ -119,13 +152,15 @@ function fit() {
         keep.getContext('2d').drawImage(outside, 0, 0);
     }
 
-    for (const c of [outside, inside]) { c.width = bw; c.height = bh; }
-
-    ctx_o.setTransform(bw / width, 0, 0, bh / height, 0, 0);
-    ctx_i.setTransform(bw / width, 0, 0, bh / height, 0, 0);
+    for (const c of [outside, inside, diffC]) { c.width = bw; c.height = bh; }
+    const sxs = bw / width, sys = bh / height;
+    ctx_o.setTransform(sxs, 0, 0, sys, 0, 0);
+    ctx_i.setTransform(sxs, 0, 0, sys, 0, 0);
+    ctx_d.setTransform(sxs, 0, 0, sys, 0, 0);
 
     ctx_o.fillStyle = "#fab387";
     ctx_o.fillRect(0, 0, width, height);
+
 
     if (keep) reOpenHoles(keep, bw, bh);
     sized = true;
@@ -278,12 +313,13 @@ setDifficulty(saved);
 buttons.find(b => b.dataset.color === window.fireColor)?.classList.add('active');
 
 function grade(difficulty=window.difficulty) {
-    const {tolerance, fullMarks} = DIFFICULTY[difficulty] ?? DIFFICULTY.easy
+    const { tolerance, fullMarks } = DIFFICULTY[difficulty] ?? DIFFICULTY.easy;
+    const carved = getMask(outside, a => a < 128);
+    const target = getMask(document.getElementById('target'), a => a > 128);
+    const s = score(carved, target, tolerance);
+    showDiff(carved, target, s.carvedWide, s.targetWide);
 
-    const carved = getMask(outside, a => a < 128)
-    const target = getMask(document.getElementById('target'), a => a > 128)
-
-    const {coverage, precision, raw} = score(carved,target,tolerance);
+    const {coverage, precision, raw} = {coverage: s.coverage, precision: s.precision, raw: s.raw};
     const a = hex[window.fireColor] === color ? 10 : 0;
     const pct = (Math.round(((Math.min(1, raw / fullMarks) * 100 + a) / 11) * 10));
 
@@ -294,7 +330,10 @@ function grade(difficulty=window.difficulty) {
     newBest(pct);
 }
 
+function clearDiff() { ctx_d.clearRect(0, 0, width, height); }
+
 outside.addEventListener("pointerdown", (e) => {
+    clearDiff();
     audio.play();
     const r = outside.getBoundingClientRect();
     last = toDesign(e);

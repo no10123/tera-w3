@@ -2,6 +2,7 @@ html, body {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 .container {
@@ -16,63 +17,72 @@ html, body {
     row-gap: 14px;
 }
 
-#inside, #outside {
+
+.topbar {
     grid-row: 1;
     grid-column: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
 }
 
-#outside {
+#grade {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.diffs { display: flex; }
+
+.diffs button {
+    --c: #a6e3a1;
+    appearance: none;
+    background: transparent;
+    border: 2px solid #45475a;
+    color: #a6adc8;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: color .18s, background-color .18s, border-color .18s, transform .12s;
+}
+
+.diffs button + button { margin-left: -2px; }
+.diffs button:first-child { border-radius: 10px 0 0 10px; }
+.diffs button:last-child { border-radius: 0 10px 10px 0; }
+
+.diffs button:hover {
+    color: var(--c);
+    border-color: var(--c);
+    position: relative;
     z-index: 2;
 }
 
-.btns {
-    grid-row: 2;
-    grid-column: 1;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
+.diffs button:active { transform: scale(.96); }
 
-.btns button {
-    --c: #fab387; 
-}
-
-button[data-color="red"]   { --c: #f38ba8; }
-button[data-color="blue"]  { --c: #89b4fa; }
-button[data-color="green"] { --c: #a6e3a1; }
-button[data-color="purple"] { --c: #cba6f7; }
-button[data-color="white"] { --c: #cdd6f4; }
-
-.btns button {
-    appearance: none;
-    background-color: transparent;
-    border: 2px solid var(--c);
-    border-radius: 15px;
-    box-sizing: border-box;
-    color: var(--c);
-    cursor: pointer;
-    padding: 12px 20px;
-    text-align: center;
-    user-select: none;
-}
-
-.btns button:hover {
-    background-color: var(--c);
+.diffs button.on {
+    background: var(--c);
     border-color: var(--c);
     color: #16161f;
+    position: relative;
+    z-index: 3;
 }
 
-#inside, #outside {
-    grid-row: 1;
+.diffs button[data-diff="easy"]   { --c: #a6e3a1; }
+.diffs button[data-diff="medium"] { --c: #f9e2af; }
+.diffs button[data-diff="hard"]   { --c: #fab387; }
+.diffs button[data-diff="insane"] { --c: #f38ba8; }
+
+
+.ref {
+    grid-row: 2;
     grid-column: 1;
-    width: min(92vw, 130vh, 1000px);
-    aspect-ratio: 2 / 1;
-    display: block;
+    margin: 0;
+    text-align: center;
 }
-h1   { grid-row: 1; grid-column: 1; margin: 0; font-size: 16px; font-weight: 600; }
-
-.ref { grid-row: 2; grid-column: 1; margin: 0; text-align: center; }
 
 .ref canvas {
     width: clamp(110px, 22vw, 190px);
@@ -92,48 +102,62 @@ h1   { grid-row: 1; grid-column: 1; margin: 0; font-size: 16px; font-weight: 600
     color: #a6adc8;
 }
 
-#inside, #outside {
+
+.stage {
     grid-row: 3;
     grid-column: 1;
-    width: min(92vw, 88vh, 1000px);   /* was 118vh */
+    display: grid;
+    width: min(92vw, 88vh, 1000px);
     aspect-ratio: 2 / 1;
+}
+
+.stage canvas {
+    grid-area: 1 / 1;
+    width: 100%;
+    height: 100%;
     display: block;
 }
 
-.btns { grid-row: 4; grid-column: 1; }
+#inside  { z-index: 1; }
+#outside { z-index: 2; cursor: crosshair; }
+#diff    { z-index: 3; pointer-events: none; }
 
-/* found this cool css split button. */
-.topbar {
-    grid-row: 1; grid-column: 1;
-    display: flex; align-items: center; justify-content: center;
-    gap: 14px; flex-wrap: wrap;
+
+.btns {
+    grid-row: 4;
+    grid-column: 1;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
-#grade { margin: 0; font-size: 16px; font-weight: 600; }
 
-.diffs { display: flex; }
-
-.diffs button {
-    --c: #a6e3a1;
+.btns button {
+    --c: #fab387;
     appearance: none;
-    background: transparent;
-    border: 2px solid #45475a;
-    color: #a6adc8;
-    font: inherit; font-size: 13px; font-weight: 600;
-    padding: 6px 12px;
+    background-color: transparent;
+    border: 2px solid var(--c);
+    border-radius: 15px;
+    box-sizing: border-box;
+    color: var(--c);
     cursor: pointer;
-    transition: color .18s, background-color .18s, border-color .18s, transform .12s;
-}
-.diffs button + button { margin-left: -2px; }
-.diffs button:first-child { border-radius: 10px 0 0 10px; }
-.diffs button:last-child  { border-radius: 0 10px 10px 0; }
-.diffs button:hover  { color: var(--c); border-color: var(--c); position: relative; z-index: 2; }
-.diffs button:active { transform: scale(.96); }
-.diffs button.on {
-    background: var(--c); border-color: var(--c); color: #16161f;
-    position: relative; z-index: 3;
+    padding: 12px 20px;
+    text-align: center;
+    user-select: none;
+    transition: background-color .18s, color .18s, border-color .18s, opacity .18s;
 }
 
-.diffs button[data-diff="easy"]   { --c: #a6e3a1; }
-.diffs button[data-diff="medium"] { --c: #f9e2af; }
-.diffs button[data-diff="hard"]   { --c: #fab387; }
-.diffs button[data-diff="insane"] { --c: #f38ba8; }
+button[data-color="red"]    { --c: #f38ba8; }
+button[data-color="blue"]   { --c: #89b4fa; }
+button[data-color="green"]  { --c: #a6e3a1; }
+button[data-color="purple"] { --c: #cba6f7; }
+button[data-color="white"]  { --c: #cdd6f4; }
+
+.btns button:hover,
+.btns button.active {
+    background-color: var(--c);
+    border-color: var(--c);
+    color: #16161f;
+}
+
+.btns button:active { transform: scale(.97); }
