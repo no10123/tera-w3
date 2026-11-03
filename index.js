@@ -12,6 +12,16 @@ const DIFFICULTY = {
     hard:   { tolerance: 1, fullMarks: 0.90 },
 };
 
+const msgs = {
+    0:  ["did you not even try?"],
+    10: ["maybe try again","lines are hard."],
+    50: ["i mean it's ok","try harder","see if you can get to 70%"],
+    70: ["wow","good job","you passed","see if you can improve"],
+    80: ["entering the big leagues","carving expert","wow!"],
+    90: ["pro","carving master","insanely good","near perfect"],
+    99: ["pro+","carving grand master","perfection"]
+}
+
 const audio = new Audio('music.mp3');
 audio.loop = true;
 
@@ -195,7 +205,9 @@ function grade(difficulty=window.difficulty) {
     const pct = Math.round(Math.min(1, raw / fullMarks) * 100);
     
     console.log({ coverage, precision, raw });
-    document.getElementById('grade').innerText = `grade: ${pct} %`;
+    let msg = Object.keys(msgs).filter(key => pct >= Number(key)).reduce((acc, key) => msgs[key], "");
+    msg = msg[Math.floor(Math.random() * msg.length)];
+    document.getElementById('grade').innerText = `grade: ${pct} % - ${msg}`;
 }
 
 outside.addEventListener("pointerdown", (e) => {
