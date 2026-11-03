@@ -5,6 +5,10 @@ const ctx_i = inside.getContext("2d");
 
 window.difficulty = "easy" // easy or hard
 
+const audio = new Audio('music.mp3');
+audio.loop = true;
+
+
 const width  = outside.width;
 const height = outside.height;
 
@@ -88,8 +92,14 @@ row.addEventListener('click', (e) => {
 
 buttons.find(b => b.dataset.color === window.fireColor)?.classList.add('active');
 
+function grade(difficulty) {
+    let grade = 0;
+    // grading
+    document.getElementById("grade").innerText = `grade: ${grade} %`;
+}
 
 outside.addEventListener("pointerdown", (e) => {
+    audio.play();
     const r = outside.getBoundingClientRect();
     last = toDesign(e);
     outside.setPointerCapture(e.pointerId);
