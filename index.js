@@ -3,11 +3,18 @@ const inside  = document.getElementById("inside");  // fire
 const ctx_o = outside.getContext("2d");
 const ctx_i = inside.getContext("2d");
 
+window.difficulty = "easy" // easy or hard
+
 const width  = outside.width;
 const height = outside.height;
 
 let sized = false;
 let last = null;
+
+function resetCanvas() {
+    ctx_o.fillStyle = "#fab387";
+    ctx_o.fillRect(0, 0, width, height);
+}
 
 function fit() {
     const r = outside.getBoundingClientRect();
@@ -60,7 +67,6 @@ const toDesign = (e) => {
     y: (e.clientY - r.top ) * height / r.height
   };
 };
-
 // maroon - #eba0ac
 // peach - #fab387
 // yellow - #f9e2af
@@ -73,10 +79,11 @@ const row = document.querySelector('.btns');
 const buttons = [...row.querySelectorAll('button')];
 
 row.addEventListener('click', (e) => {
-  const btn = e.target.closest('button');
-  if (!btn) return;
-  window.fireColor = btn.dataset.color;
-  buttons.forEach(b => b.classList.toggle('active', b === btn));
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    if (!btn.dataset.color) return;
+    window.fireColor = btn.dataset.color;
+    buttons.forEach(b => b.classList.toggle('active', b === btn));
 });
 
 buttons.find(b => b.dataset.color === window.fireColor)?.classList.add('active');
