@@ -6,6 +6,61 @@ const ctx_i = inside.getContext("2d");
 const width  = outside.width;
 const height = outside.height;
 
+let sized = false;
+let last = null;
+
+function fit() {
+    const r = outside.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const bw = Math.max(1, Math.round(r.width  * dpr));
+    const bh = Math.max(1, Math.round(r.height * dpr));
+    if (outside.width === bw && outside.height === bh) { sized = true; return; }
+
+    let keep = null;
+    if (sized) {
+        keep = document.createElement('canvas');
+        keep.width = outside.width; keep.height = outside.height;
+        keep.getContext('2d').drawImage(outside, 0, 0);
+    }
+
+    for (const c of [outside, inside]) { c.width = bw; c.height = bh; }
+
+    ctx_o.setTransform(bw / width, 0, 0, bh / height, 0, 0);
+    ctx_i.setTransform(bw / width, 0, 0, bh / height, 0, 0);
+
+    ctx_o.fillStyle = "#fab387";
+    ctx_o.fillRect(0, 0, width, height);
+
+    if (keep) reOpenHoles(keep, bw, bh);
+    sized = true;
+}
+
+function reOpenHoles(keep, bw, bh) {
+    const m = document.createElement('canvas');
+    m.width = bw; m.height = bh;
+    const mc = m.getContext('2d');
+    mc.fillStyle = '#000';
+    mc.fillRect(0, 0, bw, bh);
+    mc.globalCompositeOperation = 'destination-out';
+    mc.drawImage(keep, 0, 0, bw, bh);
+
+    ctx_o.save();
+    ctx_o.setTransform(1, 0, 0, 1, 0, 0);
+    ctx_o.globalCompositeOperation = 'destination-out';
+    ctx_o.drawImage(m, 0, 0);
+    ctx_o.restore();
+}
+
+addEventListener('resize', fit);
+
+const toDesign = (e) => {
+  const r = outside.getBoundingClientRect();
+  return {
+    x: (e.clientX - r.left) * width  / r.width,
+    y: (e.clientY - r.top ) * height / r.height
+  };
+};
+
 // maroon - #eba0ac
 // peach - #fab387
 // yellow - #f9e2af
@@ -29,7 +84,7 @@ buttons.find(b => b.dataset.color === window.fireColor)?.classList.add('active')
 
 outside.addEventListener("pointerdown", (e) => {
     const r = outside.getBoundingClientRect();
-    last = { x: e.clientX - r.left, y: e.clientY - r.top };
+    last = toDesign(e);
     outside.setPointerCapture(e.pointerId);
     carve(last, last);
 });
@@ -37,7 +92,7 @@ outside.addEventListener("pointerdown", (e) => {
 outside.addEventListener("pointermove", (e) => {
     if (!last) return;
     const r = outside.getBoundingClientRect();
-    const p = { x: e.clientX - r.left, y: e.clientY - r.top };
+    const p = toDesign(e);
     carve(last, p);
     last = p;
 });
