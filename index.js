@@ -14,6 +14,19 @@ ctx_o.fillStyle = "#fab387"
 ctx_o.fillRect(0,0,width,height);
 ctx_i.fillRect(0,0,width,height);
 
+const row = document.querySelector('.btns');
+const buttons = [...row.querySelectorAll('button')];
+
+row.addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  window.fireColor = btn.dataset.color;
+  buttons.forEach(b => b.classList.toggle('active', b === btn));
+});
+
+buttons.find(b => b.dataset.color === window.fireColor)?.classList.add('active');
+
+
 outside.addEventListener("pointerdown", (e) => {
     const r = outside.getBoundingClientRect();
     last = { x: e.clientX - r.left, y: e.clientY - r.top };

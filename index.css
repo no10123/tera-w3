@@ -33,3 +33,40 @@ html, body {
     flex-wrap: wrap;
     justify-content: center;
 }
+
+.btns button {
+    --c: #fab387; 
+}
+
+button[data-color="red"]   { --c: #f38ba8; }
+button[data-color="blue"]  { --c: #89b4fa; }
+button[data-color="green"] { --c: #a6e3a1; }
+button[data-color="purple"] { --c: #cba6f7; }
+button[data-color="white"] { --c: #cdd6f4; }
+
+.btns button {
+    appearance: none;
+    background-color: transparent;
+    border: 2px solid var(--c);
+    border-radius: 15px;
+    box-sizing: border-box;
+    color: var(--c);
+    cursor: pointer;
+    padding: 12px 20px;
+    text-align: center;
+    user-select: none;
+}
+
+.btns button:hover {
+    background-color: var(--c);
+    border-color: var(--c);
+    color: #16161f;
+}
+
+#inside, #outside {
+    grid-row: 1;
+    grid-column: 1;
+    width: min(92vw, 130vh, 1000px);
+    aspect-ratio: 2 / 1;
+    display: block;
+}
