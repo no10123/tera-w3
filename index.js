@@ -2,12 +2,80 @@ const outside = document.getElementById("outside"); // pumpkin part
 const inside  = document.getElementById("inside");  // fire
 const ctx_o = outside.getContext("2d");
 const ctx_i = inside.getContext("2d");
+const tc = document.getElementById('target').getContext('2d');
+drawFace(tc, 1, '#1e1e2e');
 
-window.difficulty = "easy" // easy or hard
+window.difficulty = "easy" // easy, medium, hard
+const DIFFICULTY = {
+    easy:   { tolerance: 3, fullMarks: 0.65 },
+    medium: { tolerance: 2, fullMarks: 0.75 },
+    hard:   { tolerance: 1, fullMarks: 0.90 },
+};
 
 const audio = new Audio('music.mp3');
 audio.loop = true;
 
+const MASK_W = 100;
+const MASK_H = 50;
+
+const scratch = document.createElement('canvas');
+scratch.width = MASK_W;
+scratch.height = MASK_H;
+const sctx = scratch.getContext('2d', { willReadFrequently: true });
+
+function getMask(source, isOn) {
+    sctx.clearRect(0,0,MASK_W,MASK_H);
+    sctx.drawImage(source,0,0,MASK_W,MASK_H);
+    const data = sctx.getImageData(0,0,MASK_W,MASK_H).data;
+
+    const mask = new Uint8Array(MASK_W * MASK_H);
+    
+    for (let i = 0; i < mask.length; i++) {
+        mask[i] = isOn(data[i * 4 + 3]) ? 1 : 0;
+    };
+    return mask;
+}
+
+function dilate(mask, r) {
+    if (r <= 0) return mask;
+    const out = new Uint8Array(mask.length);
+    for (let y = 0; y < MASK_H; y++) {
+        for (let x = 0; x < MASK_W; x++) {
+            if (!mask[y * MASK_W + x]) continue;
+            for (let dy = -r; dy <= r; dy++) {
+                for (let dx = -r; dx <= r; dx++) {
+                    const nx = x + dx, ny = y + dy;
+                    if (nx >= 0 && nx < MASK_W && ny >= 0 && ny < MASK_H) {
+                        out[ny * MASK_W + nx] = 1;
+                    }
+                }
+            }
+        }
+    }
+    return out;
+}
+
+function score(carved, target, tolerance) {
+    const carvedWide = dilate(carved, tolerance);
+    const targetWide = dilate(target, tolerance);
+
+    let targetTotal = 0, targetHit = 0, carvedTotal = 0, carvedGood = 0;
+
+    for (let i = 0; i < target.length; i++) {
+        if (target[i]) {
+            targetTotal++;
+            if (carvedWide[i]) targetHit++;
+        }
+        if (carved[i]) {
+            carvedTotal++;
+            if (targetWide[i]) carvedGood++;
+        }
+    }
+
+    const coverage  = targetTotal ? targetHit / targetTotal : 0;
+    const precision = carvedTotal ? carvedGood / carvedTotal : 0;
+    return { coverage, precision, raw: coverage * precision };
+}
 
 const width  = outside.width;
 const height = outside.height;
@@ -71,6 +139,31 @@ const toDesign = (e) => {
     y: (e.clientY - r.top ) * height / r.height
   };
 };
+
+function drawFace(c, scale = 1, color = '#fff') {
+    c.save();
+    c.scale(scale, scale);
+    c.fillStyle = color;
+    c.strokeStyle = color;
+    c.beginPath();
+    c.moveTo(50, 50);
+    c.lineTo(150, 150);
+    c.lineTo(30, 150);
+    c.fill();
+    c.beginPath();
+    c.moveTo(450, 50);
+    c.lineTo(470, 150);
+    c.lineTo(350, 150);
+    c.fill();
+    c.beginPath();
+    c.moveTo(50, 200);
+    c.lineTo(50, 250);
+    c.lineTo(450, 250);
+    c.lineTo(450, 200);
+    c.fill();
+    
+}
+
 // maroon - #eba0ac
 // peach - #fab387
 // yellow - #f9e2af
@@ -92,10 +185,17 @@ row.addEventListener('click', (e) => {
 
 buttons.find(b => b.dataset.color === window.fireColor)?.classList.add('active');
 
-function grade(difficulty) {
-    let grade = 0;
-    // grading
-    document.getElementById("grade").innerText = `grade: ${grade} %`;
+function grade(difficulty=window.difficulty) {
+    const {tolerance, fullMarks} = DIFFICULTY[difficulty] ?? DIFFICULTY.easy
+
+    const carved = getMask(outside, a => a < 128)
+    const target = getMask(document.getElementById('target'), a => a > 128)
+
+    const {coverage, precision, raw} = score(carved,target,tolerance);
+    const pct = Math.round(Math.min(1, raw / fullMarks) * 100);
+    
+    console.log({ coverage, precision, raw });
+    document.getElementById('grade').innerText = `grade: ${pct} %`;
 }
 
 outside.addEventListener("pointerdown", (e) => {
@@ -223,3 +323,5 @@ window.onload = function () {
     }
     setInterval(drawFlames, 33);
 }
+
+fit();
