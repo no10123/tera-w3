@@ -326,8 +326,8 @@ function grade(difficulty=window.difficulty) {
     console.log({ coverage, precision, raw, a });
     let msg = Object.keys(msgs).filter(key => pct >= Number(key)).reduce((acc, key) => msgs[key], "");
     msg = msg[Math.floor(Math.random() * msg.length)];
-    document.getElementById('grade').innerText = `grade: ${pct} % - ${msg} (best: ${window.best} %)`;
     newBest(pct);
+    document.getElementById('grade').innerText = `grade: ${pct} % - ${msg} (best: ${window.best} %)`;
 }
 
 function clearDiff() { ctx_d.clearRect(0, 0, width, height); }
