@@ -127,7 +127,7 @@ function score(carved, target, tolerance) {
 
 }
 
-window.TIMED = window.TIMED || { seconds: 60 };
+window.TIMED = window.TIMED || { seconds: 10 };
 
 const clockEl = document.getElementById('clock');
 
