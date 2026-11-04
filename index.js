@@ -197,12 +197,13 @@ function tick() {
 
 function playFree() {
     setMode('free');
-    show('game-container');
+    play();
 }
 
 function playTimed() {
     setMode('timed');
-    show('game-container');
+    document.getElementById('submit-btn').disabled = true;
+    play();
 }
 
 const width  = outside.width;
@@ -413,11 +414,7 @@ function grade(difficulty=window.difficulty) {
 
     const {coverage, precision, raw} = {coverage: s.coverage, precision: s.precision, raw: s.raw};
     const a = hex[window.fireColor] === color ? 10 : 0;
-    const pct = (Math.round(((Math.min(1, raw / fullMarks) * 100 + a) / 11) * 10));
-    if (mode === 'timed') {
-        const bonus = Math.round(remaining / 1000) * 0.5;
-        pct = Math.min(100, pct + bonus);
-    }
+    let pct = (Math.round(((Math.min(1, raw / fullMarks) * 100 + a) / 11) * 10));
 
     console.log({ coverage, precision, raw, a });
     let msg = Object.keys(msgs).filter(key => pct >= Number(key)).reduce((acc, key) => msgs[key], "");
