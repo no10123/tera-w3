@@ -169,3 +169,16 @@ button[color="white"]  { --c: #cdd6f4; }
 .btns button:active { transform: scale(.97); }
 
 .container.hidden { display: none; }
+
+#clock {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    min-width: 3.4em;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: #313244;
+    color: #a6e3a1;
+    transition: background-color .3s ease, color .3s ease, transform .3s ease;
+}
+#clock.low { background: #f38ba8; color: #16161f; transform: scale(1.08); }
+#clock.hidden { display: none; }

@@ -43,8 +43,8 @@
     <div class="container" id="main-menu">
         <h1>pumpkin carver</h1>
         <div class="btns">
-            <button color="green" onclick="document.getElementById('main-menu').classList.add('hidden'); document.getElementById('game-container').classList.remove('hidden');">play</button>
-            <button color="blue">play timed</button>
+            <button color="green" onclick="play();">play</button>
+            <button color="blue" onclick="setMode('timed'); play();">play timed</button>
             <button color="yellow">editor</button>
             <button color="red">settings</button>
         </div>

@@ -127,6 +127,84 @@ function score(carved, target, tolerance) {
 
 }
 
+window.TIMED = window.TIMED || { seconds: 60 };
+
+const clockEl = document.getElementById('clock');
+
+let mode = 'free'; // free, timed
+let remaining = 0; //ms
+let endsAt = 0; // performance.now() timestamp of zero
+let pausedAt = 0;
+let running = false;
+let ticker = 0;
+
+function setMode(m) {
+    mode = (m === 'timed') ? 'timed' : 'free';
+    clockEl.classList.toggle('hidden', mode !== 'timed');
+}
+
+function paintClock() {
+    if (mode !== 'timed') return;
+    clockEl.textContent = Math.ceil(remaining / 1000) + 's';
+    clockEl.classList.toggle('low', remaining > 0 && remaining <= 10000);
+}
+
+function resetClock() {
+    pauseClock();
+    remaining = window.TIMED.seconds * 1000;
+    clockEl.classList.remove('low');
+    paintClock();
+}
+
+function startClock() {
+    if (mode !== 'timed' || running || remaining <= 0) return;
+    running = true;
+    pausedAt = 0;
+    endsAt = performance.now() + remaining;
+    ticker = setInterval(tick, 100);
+    tick();
+}
+
+function pauseClock() {
+    running = false;
+    pausedAt = 0;
+    if (ticker) clearInterval(ticker);
+    ticker = 0;
+}
+
+function tick() {
+    if (!running) return;
+    if (document.hidden) {
+        if (!pausedAt) pausedAt = performance.now();
+        return;
+    }
+    if (pausedAt) {
+        endsAt += performance.now() - pausedAt;
+        pausedAt = 0;
+    }
+
+    remaining = Math.max(0, endsAt - performance.now());
+
+    if (remaining <= 0) {
+        pauseClock();
+        paintClock();
+        clockEl.classList.add('low');
+        grade(window.difficulty);
+        return;
+    }
+    paintClock();
+}
+
+function playFree() {
+    setMode('free');
+    show('game-container');
+}
+
+function playTimed() {
+    setMode('timed');
+    show('game-container');
+}
+
 const width  = outside.width;
 const height = outside.height;
 
@@ -140,6 +218,7 @@ function resetCanvas() {
 
 function startRound() {
     clearDiff();
+    resetClock();
     drawFace(tc);
     resetCanvas();
     document.getElementById('grade').innerText = `grade: ? % (best: ${window.best} %)`;
@@ -320,6 +399,11 @@ setDifficulty(saved);
 
 buttons.find(b => b.dataset.color === window.fireColor)?.classList.add('active');
 
+function play() {
+    document.getElementById('main-menu').classList.add('hidden'); 
+    document.getElementById('game-container').classList.remove('hidden');
+}
+
 function grade(difficulty=window.difficulty) {
     const { tolerance, fullMarks } = DIFFICULTY[difficulty] ?? DIFFICULTY.easy;
     const carved = getMask(outside, a => a < 128);
@@ -330,6 +414,10 @@ function grade(difficulty=window.difficulty) {
     const {coverage, precision, raw} = {coverage: s.coverage, precision: s.precision, raw: s.raw};
     const a = hex[window.fireColor] === color ? 10 : 0;
     const pct = (Math.round(((Math.min(1, raw / fullMarks) * 100 + a) / 11) * 10));
+    if (mode === 'timed') {
+        const bonus = Math.round(remaining / 1000) * 0.5;
+        pct = Math.min(100, pct + bonus);
+    }
 
     console.log({ coverage, precision, raw, a });
     let msg = Object.keys(msgs).filter(key => pct >= Number(key)).reduce((acc, key) => msgs[key], "");
@@ -341,6 +429,7 @@ function grade(difficulty=window.difficulty) {
 function clearDiff() { ctx_d.clearRect(0, 0, width, height); }
 
 outside.addEventListener("pointerdown", (e) => {
+    startClock();
     clearDiff();
     audio.play();
     const r = outside.getBoundingClientRect();
