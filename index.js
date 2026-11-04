@@ -141,12 +141,17 @@ let ticker = 0;
 function setMode(m) {
     mode = (m === 'timed') ? 'timed' : 'free';
     clockEl.classList.toggle('hidden', mode !== 'timed');
+    const submit = document.getElementById('submit-btn');
+    if (submit) submit.disabled = (mode === 'timed');
 }
 
 function paintClock() {
     if (mode !== 'timed') return;
-    clockEl.textContent = Math.ceil(remaining / 1000) + 's';
-    clockEl.classList.toggle('low', remaining > 0 && remaining <= 10000);
+    clockEl.textContent = remaining < 5000
+        ? (remaining / 1000).toFixed(1) + 's'
+        : Math.ceil(remaining / 1000) + 's';
+    const lowAt = Math.min(3000, window.TIMED.seconds * 1000 * 0.35);
+    clockEl.classList.toggle('low', remaining > 0 && remaining <= lowAt);
 }
 
 function resetClock() {
@@ -202,7 +207,6 @@ function playFree() {
 
 function playTimed() {
     setMode('timed');
-    document.getElementById('submit-btn').disabled = true;
     play();
 }
 
@@ -406,6 +410,8 @@ function play() {
 }
 
 function grade(difficulty=window.difficulty) {
+    pauseClock();
+    clockEl.classList.add('done');
     const { tolerance, fullMarks } = DIFFICULTY[difficulty] ?? DIFFICULTY.easy;
     const carved = getMask(outside, a => a < 128);
     const target = getMask(document.getElementById('target'), a => a > 128);

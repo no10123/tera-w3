@@ -182,3 +182,5 @@ button[color="white"]  { --c: #cdd6f4; }
 }
 #clock.low { background: #f38ba8; color: #16161f; transform: scale(1.08); }
 #clock.hidden { display: none; }
+
+#submit-btn:disabled { display: none; }
