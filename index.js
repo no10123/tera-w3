@@ -179,7 +179,7 @@ function loadFace(search=location.search) {
     try {
         spec = new URLSearchParams(search).get('face') || '';
     } catch (_) {}
-    return parseFace(spec) || {kind: 'preset', modes: [0, 0, 0], colorName: FACE_COLORS[Math.floor(Math.random() * FACE_COLORS.length)]};
+    return parseFace(spec) || null;
 }
 
 function faceToSpec(face) {
@@ -211,18 +211,15 @@ function drawFace(c, scale = 1, face = window.customFace) {
         return;
     }
 
-    const modes = face && face.kind === 'preset' ? face.modes : [0, 0, 0];
-    color = face && face.colorName ? hex[face.colorName] : hex[FACE_COLORS[Math.floor(Math.random() * FACE_COLORS.length)]];
-
-    color = hex[window.colors[Math.floor(Math.random() * window.colors.length)]];
-    c.save();
-    c.scale(scale, scale);
+    const rnd = (n) => Math.floor(Math.random() * n)
+    const modes = face && face.kind == 'preset' ? face.modes : [rnd(3), rnd(3), rnd(3)]
+    const colorName = face && face.kind == 'preset' ? face.colorName : FACE_COLORS[rnd(FACE_COLORS.length)];
+    color = hex[colorName];
     c.fillStyle = color;
     c.strokeStyle = color;
     let mode;
-    c.clearRect(0, 0, 500, 250);
     // left eye
-    mode = Math.floor(Math.random() * 3);
+    mode = modes[0];
     if (mode === 0) {
         c.beginPath();
         c.moveTo(50, 50);
@@ -241,7 +238,7 @@ function drawFace(c, scale = 1, face = window.customFace) {
         c.fill();
     }
     // right eye
-    mode = Math.floor(Math.random() * 3);
+    mode = modes[1];
     if (mode === 0) {
         c.beginPath();
         c.moveTo(450, 50);
@@ -260,7 +257,7 @@ function drawFace(c, scale = 1, face = window.customFace) {
         c.fill();
     }
     // mouth
-    mode = Math.floor(Math.random() * 3);
+    mode = modes[2];
     if (mode === 0) {
         c.beginPath();
         c.moveTo(50, 200);
@@ -282,6 +279,8 @@ function drawFace(c, scale = 1, face = window.customFace) {
     c.fill();
 
 }
+
+// times mode area
 
 window.TIMED = window.TIMED || { seconds: 10 };
 
@@ -377,7 +376,13 @@ function resetCanvas() {
     ctx_o.fillRect(0, 0, width, height);
 }
 
+window.cc = false;
 function startRound() {
+    if (cc) {
+        window.customFace = null; 
+        cc = false;
+    }
+    else cc = true;
     clearDiff();
     resetClock();
     drawFace(tc);
@@ -738,8 +743,8 @@ function eStats() {
     const pending = eCurrent.length >= 3 ? eArea(eCurrent) : 0;
     const pct = (commited + pending) /  (EW * EH) * 100;
     let note = `${eShapes.length} shapes - ${pct.toFixed(1)}% of the pumpkin`;
-    if (pct > 0 && pct < 8.8) note += 'small, hard'
-    if (pct > 30.2) note += 'large, easy';
+    if (pct > 0 && pct < 8.8) note += ' - small, hard'
+    if (pct > 30.2) note += ' - large, easy';
     document.getElementById('ed-status').textContent = note;
 }
 
@@ -803,7 +808,6 @@ function edPlay() {
     }
     window.customFace = face;
     play();
-    if (typeof startRound === 'function') startRound();
 }
 
 function edCopyLink() {
@@ -832,6 +836,8 @@ function openEditor() {
     eRender();
 }
 
+// start of settings area 
+
 function openSettings() {
     showPage('settings-container');
     renderSettings();
@@ -847,7 +853,9 @@ function toggleTheme() {
     renderSettings();
 }
 
-applyTheme(localStorage.getItem('pumpkin.theme') || 'dark');
+let theme = 'dark';
+try { theme = localStorage.getItem('pumpkin.theme') || 'dark'} catch (_) {}
+applyTheme(theme);
 
 function renderSettings() {
     document.getElementById('set-theme').textContent = 'theme: ' + (document.body.classList.contains('light') ? 'light' : 'dark');
