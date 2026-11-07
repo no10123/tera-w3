@@ -184,3 +184,40 @@ button[color="white"]  { --c: #cdd6f4; }
 #clock.hidden { display: none; }
 
 #submit-btn:disabled { display: none; }
+
+#editor-container .stage { grid-row: 2; grid-column: 1; }
+#editor-container #ed-status {
+    grid-row: 3;
+    grid-column: 1;
+    margin: 0;
+    min-height: 1.3em;
+    font-size: 12px;
+    color: #a6adc8;
+}
+#editor-container .btns { grid-row: 4; grid-column: 1; }
+
+#editor {
+    grid-area: 1 / 1;
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+body.light .container   { background-color: #eff1f5; color: #4c4f69; }
+body.light h1           { color: #4c4f69; }
+body.light .ref figcaption { color: #6c6f85; }
+body.light .diffs button { border-color: #bcc0cc; color: #6c6f85; }
+body.light #clock       { background: #ccd0da; }
+body.light .set-label   { color: #1e66f5; }
+
+#settings-container .btns { grid-row: 2; grid-column: 1; }
+.set-label {
+    align-self: center;
+    min-width: 3.2em;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: #89b4fa;
+}

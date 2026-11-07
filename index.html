@@ -6,7 +6,7 @@
     <title>Pumpkin Carver</title>
     <link rel="stylesheet" href="index.css">
 </head>
-<body>
+<body id="body">
     <div class="container hidden" id="game-container">
         <figure class="ref">
             <canvas id="target" width="500" height="250"></canvas>
@@ -46,10 +46,49 @@
         <div class="btns">
             <button color="green" onclick="playFree();">play</button>
             <button color="blue" onclick="playTimed();">play timed</button>
-            <button color="yellow">editor</button>
-            <button color="red">settings</button>
+            <button color="yellow" onclick="openEditor()">editor</button>
+            <button color="red" onclick="openSettings()">settings</button>
         </div>
     </div>
+    <div class="container hidden" id="editor-container">
+        <div class="topbar">
+            <h1>editor</h1>
+            <div class="diffs" role="group" aria-label="shape colour">
+                <button data-ed="red">red</button>
+                <button data-ed="green">green</button>
+                <button data-ed="blue">blue</button>
+                <button data-ed="purple">purple</button>
+                <button data-ed="white" class="on">white</button>
+            </div>
+        </div>
+
+        <div class="stage"><canvas id="editor"></canvas></div>
+
+        <p id="ed-status">click to place points</p>
+
+        <div class="btns">
+            <button onclick="edCloseShape()" style="--c: #a6e3a1">close shape</button>
+            <button onclick="edUndo()"     style="--c: #f5e0dc">undo</button>
+            <button onclick="edClear()"    style="--c: #f38ba8">clear</button>
+            <button onclick="edToggleMirror()" id="ed-mirror" style="--c: #89b4fa">mirror: off</button>
+            <button onclick="edPlay()"     style="--c: #cba6f7">play this</button>
+            <button onclick="edCopyLink()" style="--c: #f9e2af">copy link</button>
+            <button onclick="showPage('main-menu')" style="--c: #6c7086">back</button>
+        </div>
+    </div>
+    <div class="container hidden" id="settings-container">
+    <h1>settings</h1>
+    <div class="btns">
+        <button id="set-theme" onclick="toggleTheme()" style="--c: #f9e2af">theme: dark</button>
+        <button id="set-mute" onclick="toggleMute()" style="--c: #a6e3a1">music: on</button>
+        <button onclick="bumpVolume(-0.1)" style="--c: #89b4fa">vol −</button>
+        <span id="set-vol" class="set-label">100%</span>
+        <button onclick="bumpVolume(0.1)" style="--c: #89b4fa">vol +</button>
+        <button onclick="showPage('main-menu')" style="--c: #6c7086">back</button>
+    </div>
+</div>
+
+
     <script src="index.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script><script>eruda.init()</script>
 </body>

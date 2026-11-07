@@ -9,8 +9,15 @@ let color;
 window.best = 0
 const MASK_W = 100;
 const MASK_H = 50;
-const newBest = (score) => { window.best = Math.max(window.best, score);}
+const PAGES =  ['main-menu', 'game-container', 'editor-container', 'settings-container'];
 window.colors = ["red", "green", "blue", "purple", "white"];
+const FACE_COLORS = window.colors;
+const FACE_MAX = {
+    shapes: 20,
+    points: 200,
+    spec: 20000,
+};
+const newBest = (score) => { window.best = Math.max(window.best, score);}
 const hex = {"red":"#f38ba8","green":"#a6e3a1","blue":"#89b4fa","purple":"#cba6f7","white":"#f5e0dc"};
 drawFace(tc, 1, '#1e1e2e');
 
@@ -124,6 +131,155 @@ function score(carved, target, tolerance) {
     const coverage  = targetTotal ? targetHit / targetTotal : 0;
     const precision = carvedTotal ? carvedGood / carvedTotal : 0;
     return { coverage, precision, raw: coverage * precision, carvedWide, targetWide };
+
+}
+// url thingy idea
+// i think im goona use the prefix parse for the url stuff to keep it organized.
+
+function parsePreset(spec) {
+    const m = spec.match(/^([0-2])([0-2])([0-2])(?:-([a-z]+))?$/)
+    if (!m) return null;
+    const colorName = m[4] || FACE_COLORS[Math.floor(Math.random() * FACE_COLORS.length)];
+    if (!FACE_COLORS.includes(colorName)) return null;
+    return {kind: 'preset', modes: [Number(m[1]), Number(m[2]), Number(m[3])],colorName,}
+}
+
+function parsePolygons(spec) {
+    const shapes = [];
+    for (const s of spec.split(/[;|]/)) {
+        const i = s.indexOf(':');
+        if (i < 0) return null;
+        const colorName = s.slice(0, i);
+        if (!FACE_COLORS.includes(colorName)) return null;
+        const points = [];
+        for (const p of s.slice(i + 1).trim().split(/\s+/)) {
+            if (!p) continue;
+            const bits = p.split(',');
+            if (bits.length !== 2) return null;
+            const x = Number(bits[0]), y = Number(bits[1]);
+            if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+            points.push([Math.min(Math.max(0,x),500), Math.min(Math.max(0,y),250)]);
+        }
+        if (points.length < 3 || points.length > FACE_MAX.points) return null;
+        shapes.push({colorName, points});
+        if (shapes.length > FACE_MAX.shapes) return null;
+    }
+    return shapes.length ? {kind: 'shapes', shapes} : null;
+}
+
+function parseFace(spec) {
+    if (typeof spec !== 'string') return null;
+    const s = spec.trim();
+    if (!s || s.length > FACE_MAX.spec) return null;
+    return parsePreset(s) || parsePolygons(s) || null;
+}
+
+function loadFace(search=location.search) {
+    let spec = '';
+    try {
+        spec = new URLSearchParams(search).get('face') || '';
+    } catch (_) {}
+    return parseFace(spec) || {kind: 'preset', modes: [0, 0, 0], colorName: FACE_COLORS[Math.floor(Math.random() * FACE_COLORS.length)]};
+}
+
+function faceToSpec(face) {
+    if (!face || typeof face !== 'object') return '';
+    if (face.kind === 'preset') {
+        return `${face.modes[0]}${face.modes[1]}${face.modes[2]}-${face.colorName}`;
+    } else if (face.kind === 'shapes') {
+        return face.shapes.map(s => `${s.colorName}:${s.points.map(p => p.join(',')).join(' ')}`).join(';');
+    }
+}
+
+function drawFace(c, scale = 1, face = window.customFace) {
+    c.save();
+    c.scale(scale, scale);
+    c.clearRect(0, 0, 500, 250);
+
+    // start of idea -- i think ill do a point system.
+    if (face && face.kind === 'shapes') {
+        color = hex[face.shapes[0].colorName];
+        for (const s of face.shapes) {
+            c.fillStyle = hex[s.colorName];
+            c.strokeStyle = hex[s.colorName];
+            c.beginPath();
+            s.points.forEach(([x,y], i) => i ? c.lineTo(x,y) : c.moveTo(x,y));
+            c.closePath();
+            c.fill();
+        }
+        c.restore();
+        return;
+    }
+
+    const modes = face && face.kind === 'preset' ? face.modes : [0, 0, 0];
+    color = face && face.colorName ? hex[face.colorName] : hex[FACE_COLORS[Math.floor(Math.random() * FACE_COLORS.length)]];
+
+    color = hex[window.colors[Math.floor(Math.random() * window.colors.length)]];
+    c.save();
+    c.scale(scale, scale);
+    c.fillStyle = color;
+    c.strokeStyle = color;
+    let mode;
+    c.clearRect(0, 0, 500, 250);
+    // left eye
+    mode = Math.floor(Math.random() * 3);
+    if (mode === 0) {
+        c.beginPath();
+        c.moveTo(50, 50);
+        c.lineTo(150, 150);
+        c.lineTo(30, 150);
+        c.fill();
+    } else if (mode === 1) {
+        c.beginPath();
+        c.arc(100, 100, 50, 0, Math.PI * 2);
+        c.fill();
+    } else if (mode === 2) {
+        c.beginPath();
+        c.moveTo(50, 150);
+        c.lineTo(150, 150);
+        c.lineTo(100, 50);
+        c.fill();
+    }
+    // right eye
+    mode = Math.floor(Math.random() * 3);
+    if (mode === 0) {
+        c.beginPath();
+        c.moveTo(450, 50);
+        c.lineTo(470, 150);
+        c.lineTo(350, 150);
+        c.fill();
+    } else if (mode === 1) {
+        c.beginPath();
+        c.arc(400, 100, 50, 0, Math.PI * 2);
+        c.fill();
+    } else if (mode === 2) {
+        c.beginPath();
+        c.moveTo(450, 150);
+        c.lineTo(350, 150);
+        c.lineTo(400, 50);
+        c.fill();
+    }
+    // mouth
+    mode = Math.floor(Math.random() * 3);
+    if (mode === 0) {
+        c.beginPath();
+        c.moveTo(50, 200);
+        c.lineTo(50, 250);
+        c.lineTo(450, 250);
+        c.lineTo(450, 200);
+    } else if (mode === 1) {
+        c.beginPath();
+        c.arc(250, 225, 25, 0, Math.PI);
+        c.fill();
+    } else if (mode === 2) {
+        c.beginPath();
+        c.moveTo(50, 200);
+        c.lineTo(450, 190);
+        c.lineTo(450, 250);
+        c.lineTo(50, 250);
+        c.stroke();
+    }
+    c.fill();
 
 }
 
@@ -285,74 +441,6 @@ const toDesign = (e) => {
 };
 
 
-function drawFace(c, scale = 1) {
-    color = hex[window.colors[Math.floor(Math.random() * window.colors.length)]];
-    c.save();
-    c.scale(scale, scale);
-    c.fillStyle = color;
-    c.strokeStyle = color;
-    let mode;
-    c.clearRect(0, 0, 500, 250);
-    // left eye
-    mode = Math.floor(Math.random() * 3);
-    if (mode === 0) {
-        c.beginPath();
-        c.moveTo(50, 50);
-        c.lineTo(150, 150);
-        c.lineTo(30, 150);
-        c.fill();
-    } else if (mode === 1) {
-        c.beginPath();
-        c.arc(100, 100, 50, 0, Math.PI * 2);
-        c.fill();
-    } else if (mode === 2) {
-        c.beginPath();
-        c.moveTo(50, 150);
-        c.lineTo(150, 150);
-        c.lineTo(100, 50);
-        c.fill();
-    }
-    // right eye
-    mode = Math.floor(Math.random() * 3);
-    if (mode === 0) {
-        c.beginPath();
-        c.moveTo(450, 50);
-        c.lineTo(470, 150);
-        c.lineTo(350, 150);
-        c.fill();
-    } else if (mode === 1) {
-        c.beginPath();
-        c.arc(400, 100, 50, 0, Math.PI * 2);
-        c.fill();
-    } else if (mode === 2) {
-        c.beginPath();
-        c.moveTo(450, 150);
-        c.lineTo(350, 150);
-        c.lineTo(400, 50);
-        c.fill();
-    }
-    // mouth
-    mode = Math.floor(Math.random() * 3);
-    if (mode === 0) {
-        c.beginPath();
-        c.moveTo(50, 200);
-        c.lineTo(50, 250);
-        c.lineTo(450, 250);
-        c.lineTo(450, 200);
-    } else if (mode === 1) {
-        c.beginPath();
-        c.arc(250, 225, 25, 0, Math.PI);
-        c.fill();
-    } else if (mode === 2) {
-        c.beginPath();
-        c.moveTo(50, 200);
-        c.lineTo(450, 190);
-        c.lineTo(450, 250);
-        c.lineTo(50, 250);
-        c.stroke();
-    }
-    c.fill();
-}
 
 // maroon - #eba0ac
 // peach - #fab387
@@ -407,6 +495,8 @@ buttons.find(b => b.dataset.color === window.fireColor)?.classList.add('active')
 function play() {
     document.getElementById('main-menu').classList.add('hidden'); 
     document.getElementById('game-container').classList.remove('hidden');
+    fit();
+    startRound();
 }
 
 function grade(difficulty=window.difficulty) {
@@ -559,4 +649,245 @@ window.onload = function () {
     setInterval(drawFlames, 33);
 }
 
+// start of editor part.
+window.customFace = loadFace();
+
+const EW = 500;
+const EH = 250;
+const eCanvas = document.getElementById('editor');
+const ectx = eCanvas.getContext('2d');
+
+let eShapes = [];
+let eCurrent = [];
+let eColor = 'white';
+let edMirror = false; // mirror mode to make faces easier.
+
+function eArea(pts) {
+    let a = 0;
+    for (let i = 0; i < pts.length; i++) {
+        const [x1, y1] = pts[i];
+        const [x2, y2] = pts[(i + 1) % pts.length];
+        a += (x1 * y2 - x2 * y1);
+    }
+    return Math.abs(a) / 2;
+}
+
+function eFit() {
+    const r = eCanvas.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    eCanvas.width = Math.round(r.width * dpr);
+    eCanvas.height = Math.round(r.height * dpr);
+    ectx.setTransform(eCanvas.width / EW, 0, 0, eCanvas.height / EH, 0, 0);
+    eRender();
+}
+
+function eRender() {
+    ectx.clearRect(0, 0, EW, EH);
+    ectx.fillStyle = '#fab387';
+    ectx.fillRect(0, 0, EW, EH);
+    ectx.strokeStyle = 'rgba(30,30,46,.1)';
+    ectx.lineWidth = 1;
+    for (let x = 50; x < EW; x += 50) {
+        ectx.beginPath();
+        ectx.moveTo(x, 0);
+        ectx.lineTo(x, EH);
+        ectx.stroke();
+    }
+    for (let y = 50; y < EH; y += 50) {
+        ectx.beginPath();
+        ectx.moveTo(0, y);
+        ectx.lineTo(EW, y);
+        ectx.stroke();
+    }
+
+    ectx.strokeStyle = 'rgba(30,30,46,.35)';
+    ectx.setLineDash([8, 8]);
+    ectx.beginPath();
+    ectx.moveTo(EW / 2, 0);
+    ectx.lineTo(EW / 2, EH);
+    ectx.stroke();
+    ectx.setLineDash([]);
+
+    for (const sh of eShapes) {
+        ectx.fillStyle = hex[sh.colorName] || "#fff";
+        ectx.beginPath();
+        sh.points.forEach(([x, y], i) => i ? ectx.lineTo(x, y) : ectx.moveTo(x, y));
+        ectx.closePath();
+        ectx.fill();
+    }
+    
+    if (eCurrent.length) {
+        ectx.strokeStyle = "#1e1e2e";
+        ectx.lineWidth = 2;
+        ectx.beginPath();
+        eCurrent.forEach(([x, y], i) => i ? ectx.lineTo(x, y) : ectx.moveTo(x, y));
+        ectx.stroke();
+        ectx.fillStyle = "#1e1e2e";
+        for (const [x, y] of eCurrent) {
+            ectx.beginPath();
+            ectx.arc(x, y, 5, 0, Math.PI * 2);
+            ectx.fill();
+        }
+    }
+    eStats();
+}
+
+function eStats() {
+    const commited = eShapes.reduce((acc, sh) => acc + eArea(sh.points), 0);
+    const pending = eCurrent.length >= 3 ? eArea(eCurrent) : 0;
+    const pct = (commited + pending) /  (EW * EH) * 100;
+    let note = `${eShapes.length} shapes - ${pct.toFixed(1)}% of the pumpkin`;
+    if (pct > 0 && pct < 8.8) note += 'small, hard'
+    if (pct > 30.2) note += 'large, easy';
+    document.getElementById('ed-status').textContent = note;
+}
+
+eCanvas.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    const p = ePoint(e);
+    if (eCurrent.length >= 3) {
+        const [x0, y0] = eCurrent[0];
+        if (Math.hypot(p[0] - x0, p[1] - y0) < 12) {eCloseShape(); return;}
+    }
+    eCurrent.push(p);
+    eRender();
+})
+
+function eCloseShape() {
+    if (eCurrent.length < 3) {eStats(); return; }
+    eShapes.push({colorName: eColor, points: eCurrent.slice() });
+
+    if (edMirror) {
+        const own = eCurrent.map(([x, y]) => x + ',' + y);
+        const flipped = eCurrent.map(([x, y]) => (EW - x) + ',' + y)
+        // don't coopy symetric shapies.
+        if (!flipped.every(k => own.includes(k))) {
+            eShapes.push({colorName: eColor, points:eCurrent.map(([x, y]) => [EW - x, y])})
+        }
+    }
+    eCurrent = [];
+    eRender();
+}
+
+// ed for the ui buttons. 
+
+function edUndo() {
+    if (eCurrent.length) eCurrent.pop();
+    else eShapes.pop();
+    eRender();
+}
+
+function edClear() {
+    eShapes = [];
+    eCurrent = []
+    eRender();
+}
+
+function edToggleMirror() {
+    edMirror = !edMirror;
+    document.getElementById('ed-mirror').textContent = 'mirror: ' + (edMirror ? 'on' : 'off');
+}
+
+function edSpec() {
+    const shapes = eShapes.slice();
+    if (eCurrent.length >= 3) shapes.push({colorName: eColor, points: eCurrent});
+    return faceToSpec({kind: 'shapes', shapes})
+}
+
+function edPlay() {
+    const face = parseFace(edSpec());
+    if (!face) {
+        document.getElementById('ed-status').textContent = 'needs to be a closed shape of 3+ points'
+        return;
+    }
+    window.customFace = face;
+    play();
+    if (typeof startRound === 'function') startRound();
+}
+
+function edCopyLink() {
+    const base = location.href.split(/[?#]/)[0];
+    document.getElementById('ed-status').textContent = base + '?face=' + encodeURIComponent(edSpec());
+}
+
+
+function showPage(id) {
+    for (const p of PAGES) {
+        const el = document.getElementById(p);
+        if (el) el.classList.toggle('hidden', p !== id)
+    }
+}
+
+function openEditor() {
+    showPage('editor-container');
+    if (window.customFace && window.customFace.kind === 'shapes' && !eShapes.length) {
+        eShapes = window.customFace.shapes.map(s => ({
+            colorName: s.colorName,
+            points: s.points.map(p => [p[0], p[1]])
+        }))
+    }
+    eCurrent = [];
+    eFit();
+    eRender();
+}
+
+function openSettings() {
+    showPage('settings-container');
+    renderSettings();
+}
+
+function applyTheme(name) {
+    document.body.classList.toggle('light', name === 'light');
+    try { localStorage.setItem('pumpkin.theme', name); } catch (_) {}
+}
+
+function toggleTheme() {
+    applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');
+    renderSettings();
+}
+
+applyTheme(localStorage.getItem('pumpkin.theme') || 'dark');
+
+function renderSettings() {
+    document.getElementById('set-theme').textContent = 'theme: ' + (document.body.classList.contains('light') ? 'light' : 'dark');
+    document.getElementById('set-mute').textContent = 'music: ' + (audio.muted ? 'off' : 'on');
+    document.getElementById('set-vol').textContent = Math.round(audio.volume * 100) + '%';
+}
+
+function bumpVolume(d) {
+    audio.volume = Math.max(0, Math.min(1, Math.round((audio.volume + d) * 10) / 10));
+    try { localStorage.setItem('pumpkin.volume', String(audio.volume)); } catch (_) {}
+    renderSettings();
+}
+
+function toggleMute() {
+    audio.muted = ! audio.muted;
+    try { localStorage.setItem('pumpkin.muted', audio.muted ? '1' : '0');  } catch (_) {}
+    renderSettings();
+}
+
+document.querySelectorAll('[data-ed]').forEach(b => {
+    b.addEventListener('click', () => {
+        eColor = b.dataset.ed;
+        document.querySelectorAll('[data-ed]').forEach(o => o.classList.toggle('on', o === b));
+    })
+})
+
+function ePoint(e) {
+   const r = eCanvas.getBoundingClientRect();
+   return [
+       Math.max(0, Math.min(EW, Math.round((e.clientX - r.left) * EW / r.width))),
+       Math.max(0, Math.min(EH, Math.round((e.clientY - r.top ) * EH / r.height))),
+   ];
+}
+
+window.addEventListener('resize', eFit);
+setTimeout(eFit, 0);
+
+
 fit();
+
+const faceSpec = new URLSearchParams(location.search).get('face');
+
+if (faceSpec && parseFace(faceSpec)) playFree()
